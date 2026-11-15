@@ -376,6 +376,7 @@ end)
         end
     end)
 
+    
     -- WINDOW OBJECT
     local window = self
 
