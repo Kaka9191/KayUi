@@ -758,30 +758,37 @@ function tab:AddDropdown(config)
 
     arrow.TextXAlignment = Enum.TextXAlignment.Center
 
-    local function UpdateSize()
-        local height = 43
+    
+local function UpdateSize()
+    local height = 43
 
-        if opened then
-            height = 43 + (#options * 34)
-        end
-
-        Tween(frame, {
-            Size = UDim2.new(1, -5, 0, height)
-        })
+    if opened then
+        height = 43 + (#options * 34)
     end
+
+    frame.Size = UDim2.new(1, -5, 0, height)
+
+    task.defer(function()
+        page.CanvasSize = UDim2.fromOffset(
+            0,
+            layout.AbsoluteContentSize.Y + 15
+        )
+    end)
+end
 
     local function Select(option)
-        selected = option
-        valueLabel.Text = tostring(option)
+    selected = option
+    valueLabel.Text = tostring(option)
 
-        if config.Callback then
-            task.spawn(config.Callback, option)
-        end
-
-        opened = false
-        arrow.Text = "⌄"
-        UpdateSize()
+    if config.Callback then
+        task.spawn(config.Callback, option)
     end
+
+    opened = false
+    arrow.Text = "⌄"
+
+    UpdateSize()
+            end
 
     for index, option in ipairs(options) do
         local optionButton = Create("TextButton", {
