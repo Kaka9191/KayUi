@@ -245,21 +245,68 @@ function KayUI:CreateWindow(config)
         theme.Muted
     ).TextSize = 9
 
-    local close = Create("TextButton", {
-        Size = UDim2.fromOffset(35, 32),
-        Position = UDim2.new(1, -43, 0, 11),
-        BackgroundColor3 = theme.Card,
-        Text = "×",
-        TextColor3 = theme.Text,
-        TextSize = 20,
-        Font = Enum.Font.GothamBold
-    }, header)
+    
+-- CLOSE / REOPEN SYSTEM
 
-    Corner(close, 8)
+local close = Create("TextButton", {
+    Size = UDim2.fromOffset(35, 32),
+    Position = UDim2.new(1, -43, 0, 11),
+    BackgroundColor3 = theme.Card,
+    Text = "×",
+    TextColor3 = theme.Text,
+    TextSize = 20,
+    Font = Enum.Font.GothamBold
+}, header)
 
-    close.Activated:Connect(function()
-        gui:Destroy()
-    end)
+Corner(close, 8)
+
+local reopen = Create("TextButton", {
+    Name = "KUI_Reopen",
+    Size = UDim2.fromOffset(55, 55),
+    Position = UDim2.new(0, 18, 0.5, 0),
+    AnchorPoint = Vector2.new(0, 0.5),
+    BackgroundColor3 = theme.Accent,
+    Text = "KUI",
+    TextColor3 = Color3.new(1, 1, 1),
+    TextSize = 16,
+    Font = Enum.Font.GothamBlack,
+    Visible = false,
+    AutoButtonColor = false
+}, gui)
+
+Corner(reopen, 18)
+Stroke(reopen, theme.Accent)
+
+close.Activated:Connect(function()
+    Tween(main, {
+        Size = UDim2.fromOffset(0, 0)
+    }, 0.15)
+
+    task.wait(0.15)
+
+    main.Visible = false
+    main.Size = UDim2.fromOffset(
+        config.Width or 540,
+        config.Height or 370
+    )
+
+    reopen.Visible = true
+end)
+
+reopen.Activated:Connect(function()
+    reopen.Visible = false
+    main.Visible = true
+
+    main.Size = UDim2.fromOffset(0, 0)
+
+    Tween(main, {
+        Size = UDim2.fromOffset(
+            config.Width or 540,
+            config.Height or 370
+        )
+    }, 0.2)
+end)
+
 
     -- SIDEBAR
     local sidebar = Create("Frame", {
