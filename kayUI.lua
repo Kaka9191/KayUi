@@ -404,13 +404,20 @@ end)
         }, page)
 
         layout:GetPropertyChangedSignal(
-            "AbsoluteContentSize"
-        ):Connect(function()
-            page.CanvasSize = UDim2.fromOffset(
+    "AbsoluteContentSize"
+):Connect(function()
+
+    task.defer(function()
+        if page and page.Parent then
+            page.CanvasSize = UDim2.new(
                 0,
-                layout.AbsoluteContentSize.Y + 15
+                0,
+                0,
+                layout.AbsoluteContentSize.Y + 10
             )
-        end)
+        end
+    end)
+end)
 
         local tabButton = Create("TextButton", {
             Size = UDim2.new(1, 0, 0, 40),
