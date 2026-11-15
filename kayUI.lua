@@ -703,6 +703,217 @@ end)
             }
         end
 
+        
+-- DROPDOWN
+
+function tab:AddDropdown(config)
+    config = config or {}
+
+    local options = config.Options or {}
+    local selected = config.Default or options[1]
+    local opened = false
+    local optionButtons = {}
+
+    local frame = Create("Frame", {
+        Size = UDim2.new(1, -5, 0, 43),
+        BackgroundColor3 = theme.Card,
+        ClipsDescendants = true
+    }, page)
+
+    Corner(frame, 9)
+    Stroke(frame)
+
+    local mainButton = Create("TextButton", {
+        Size = UDim2.new(1, 0, 0, 43),
+        BackgroundTransparency = 1,
+        Text = "",
+        AutoButtonColor = false
+    }, frame)
+
+    local title = MakeLabel(
+        mainButton,
+        config.Name or "Dropdown",
+        UDim2.new(0.55, 0, 1, 0),
+        UDim2.fromOffset(12, 0),
+        theme.Text
+    )
+
+    local valueLabel = MakeLabel(
+        mainButton,
+        tostring(selected or "Selecionar"),
+        UDim2.new(0.35, 0, 1, 0),
+        UDim2.new(0.58, 0, 0, 0),
+        theme.Accent
+    )
+
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local arrow = MakeLabel(
+        mainButton,
+        "⌄",
+        UDim2.fromOffset(20, 40),
+        UDim2.new(1, -25, 0, 0),
+        theme.Muted
+    )
+
+    arrow.TextXAlignment = Enum.TextXAlignment.Center
+
+    local function UpdateSize()
+        local height = 43
+
+        if opened then
+            height = 43 + (#options * 34)
+        end
+
+        Tween(frame, {
+            Size = UDim2.new(1, -5, 0, height)
+        })
+    end
+
+    local function Select(option)
+        selected = option
+        valueLabel.Text = tostring(option)
+
+        if config.Callback then
+            task.spawn(config.Callback, option)
+        end
+
+        opened = false
+        arrow.Text = "⌄"
+        UpdateSize()
+    end
+
+    for index, option in ipairs(options) do
+        local optionButton = Create("TextButton", {
+            Size = UDim2.new(1, -12, 0, 30),
+            Position = UDim2.fromOffset(6, 43 + ((index - 1) * 34)),
+            BackgroundColor3 = theme.Sidebar,
+            Text = tostring(option),
+            TextColor3 = theme.Text,
+            TextSize = 11,
+            Font = Enum.Font.GothamMedium,
+            AutoButtonColor = false
+        }, frame)
+
+        Corner(optionButton, 7)
+
+        optionButton.Activated:Connect(function()
+            Select(option)
+        end)
+
+        table.insert(optionButtons, optionButton)
+    end
+
+    mainButton.Activated:Connect(function()
+        opened = not opened
+        arrow.Text = opened and "⌃" or "⌄"
+        UpdateSize()
+    end)
+
+    return {
+        Get = function()
+            return selected
+        end,
+
+        Set = function(value)
+            for _, option in ipairs(options) do
+                if option == value then
+                    Select(value)
+                    return
+                end
+            end
+        end
+    }
+end
+
+-- KEYBIND
+
+function tab:AddKeybind(config)
+    config = config or {}
+
+    local currentKey = config.Default or Enum.KeyCode.Unknown
+    local listening = false
+
+    local frame = Create("Frame", {
+        Size = UDim2.new(1, -5, 0, 46),
+        BackgroundColor3 = theme.Card
+    }, page)
+
+    Corner(frame, 9)
+    Stroke(frame)
+
+    MakeLabel(
+        frame,
+        config.Name or "Keybind",
+        UDim2.new(0.55, 0, 1, 0),
+        UDim2.fromOffset(12, 0),
+        theme.Text
+    )
+
+    local bindButton = Create("TextButton", {
+        Size = UDim2.fromOffset(105, 30),
+        Position = UDim2.new(1, -115, 0.5, -15),
+        BackgroundColor3 = theme.Sidebar,
+        Text = currentKey.Name,
+        TextColor3 = theme.Accent,
+        TextSize = 11,
+        Font = Enum.Font.GothamBold,
+        AutoButtonColor = false
+    }, frame)
+
+    Corner(bindButton, 7)
+
+    bindButton.Activated:Connect(function()
+        listening = true
+        bindButton.Text = "..."
+    end)
+
+    local connection
+
+    connection = UIS.InputBegan:Connect(function(input, processed)
+        if not listening then
+            if not processed
+            and input.UserInputType == Enum.UserInputType.Keyboard
+            and input.KeyCode == currentKey then
+
+                if config.Callback then
+                    task.spawn(config.Callback)
+                end
+            end
+
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            currentKey = input.KeyCode
+            bindButton.Text = currentKey.Name
+            listening = false
+        end
+    end)
+
+    return {
+        Get = function()
+            return currentKey
+        end,
+
+        Set = function(key)
+            if typeof(key) == "EnumItem"
+            and key.EnumType == Enum.KeyCode then
+                currentKey = key
+                bindButton.Text = key.Name
+            end
+        end,
+
+        Destroy = function()
+            if connection then
+                connection:Disconnect()
+            end
+
+            frame:Destroy()
+        end
+    }
+        end
+        
         return tab
     end
 
